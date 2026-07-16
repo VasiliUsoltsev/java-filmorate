@@ -27,15 +27,14 @@ public class UserController {
     public User create(@Valid @RequestBody User newUser) {
         log.debug("Создание пользователя: {}", newUser.getLogin() + " (email: " + newUser.getEmail() + ")");
 
-        if (!isValidLogin(newUser.getLogin())) {
-            throw new ValidationException("Логин пользователя содержит пробелы");
-        }
+        // Проверка логина на пробелы
+        isValidLogin(newUser.getLogin());
 
         // Генерация идентификатора пользователя
         newUser.setId(getNextId());
 
         // имя для отображения может быть пустым — в таком случае будет использован логин
-        if (newUser.getName() == null || newUser.getName().isBlank()) {
+        if (isEmptyNameUser(newUser.getName())) {
             newUser.setName(newUser.getLogin());
         }
 
@@ -59,7 +58,15 @@ public class UserController {
 
     // Проверка корректности логина пользователя
     private boolean isValidLogin(String login) {
-        return !login.contains(" ");
+        if (login.contains(" ")) {
+            throw new ValidationException("Логин пользователя содержит пробелы");
+        }
+        return true;
+    }
+
+    // Обработка имени пользователя
+    public boolean isEmptyNameUser(String name) {
+        return name == null || name.isBlank();
     }
 
 
@@ -74,12 +81,15 @@ public class UserController {
         User oldUser = users.get(user.getId());
 
         if (oldUser != null && users.containsKey(user.getId())) {
-            if (!isValidLogin(user.getLogin())) {
-                throw new ValidationException("Логин пользователя содержит пробелы");
-            }
+            // Проверка логина на пробелы
+            isValidLogin(user.getLogin());
+
             oldUser.setLogin(user.getLogin());
 
-            if (user.getName() != null) {
+            // имя для отображения может быть пустым — в таком случае будет использован логин
+            if (isEmptyNameUser(user.getName())) {
+                oldUser.setName(user.getLogin());
+            } else {
                 oldUser.setName(user.getName());
             }
 

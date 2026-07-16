@@ -27,9 +27,8 @@ public class FilmController {
     public Film create(@Valid @RequestBody Film newFilm) {
         log.debug("Создание фильма: {}", newFilm.getName() + "(" + newFilm.getReleaseDate() + ")");
 
-        if (newFilm.getReleaseDate() != null && isValidReleaseDate(newFilm.getReleaseDate())) {
-            throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
-        }
+        // Дата релиза не может быть раньше 28 декабря 1895 года
+        isValidReleaseDate(newFilm.getReleaseDate());
 
         // Генерация идентификатора фильма
         newFilm.setId(getNextId());
@@ -52,9 +51,12 @@ public class FilmController {
         return ++currentMaxId;
     }
 
-    // Проверка вадности даты релиза фильма
+    // Проверка валидности даты релиза фильма
     private boolean isValidReleaseDate(LocalDate releaseDate) {
-        return releaseDate.isBefore(LocalDate.of(1895, 12, 28));
+        if (releaseDate != null && !releaseDate.isAfter(LocalDate.of(1895, 12, 28))) {
+            throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
+        }
+        return true;
     }
 
     @PutMapping
@@ -71,29 +73,20 @@ public class FilmController {
         log.debug("У нас хранилось: {}", oldFilm);
 
         if (oldFilm != null && films.containsKey(film.getId())) {
-            if (film.getReleaseDate() != null && isValidReleaseDate(film.getReleaseDate())) {
-                throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
-            }
+            // Дата релиза не может быть раньше 28 декабря 1895 года
+            isValidReleaseDate(film.getReleaseDate());
 
             // Редактирование названия фильма
-            if (film.getName() != null) {
                 oldFilm.setName(film.getName());
-            }
 
             // Редактирование даты релиза фильма
-            if (film.getReleaseDate() != null) {
                 oldFilm.setReleaseDate(film.getReleaseDate());
-            }
 
             // Редактирование описания фильма
-            if (film.getDescription() != null) {
                 oldFilm.setDescription(film.getDescription());
-            }
 
             // Редактирование продолжительности фильма
-            if (film.getDuration() != null) {
                 oldFilm.setDuration(film.getDuration());
-            }
         } else {
             throw new ValidationException("Фильм под идентификатором " + film.getId() + " не найден");
         }

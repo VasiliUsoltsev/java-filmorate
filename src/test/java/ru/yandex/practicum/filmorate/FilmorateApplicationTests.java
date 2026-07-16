@@ -120,7 +120,7 @@ class FilmorateApplicationTests {
         String json = "{\n" +
                 "  \"name\": \"Test\",\n" +
                 "  \"description\": \" Test\",\n" +
-                "  \"releaseDate\": \"1895-12-28\",\n" +
+                "  \"releaseDate\": \"1895-12-29\",\n" +
                 "  \"duration\": 100\n" +
                 "}";
         HttpRequest req = HttpRequest.newBuilder()

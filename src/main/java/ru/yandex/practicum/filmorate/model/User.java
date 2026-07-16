@@ -17,7 +17,6 @@ public class User {
     @Email(message = "Электронная почта указана некорректно")
     String email;
 
-    @NotNull(message = "Логин пользователя не указан")
     @NotBlank(message = "Логин пользователя пуст")
     String login;
 
