@@ -12,11 +12,11 @@ import java.util.Map;
 
 @Slf4j
 @Component
-public class InMemoryUserStorage implements UserStorage{
+public class InMemoryUserStorage implements UserStorage {
     // Хранение созданных пользователей
     private final Map<Long, User> users = new HashMap<>();
 
-    public final static String EXCEPTION_TEXT_ID_USER_NOT_FOUND = "Пользователь не найден по идентификатору: ";
+    public static final String EXCEPTION_TEXT_ID_USER_NOT_FOUND = "Пользователь не найден по идентификатору: ";
 
     @Override
     public User createUser(User newUser) {

@@ -13,11 +13,11 @@ import java.util.Map;
 
 @Slf4j
 @Component
-public class InMemoryFilmStorage implements FilmStorage{
+public class InMemoryFilmStorage implements FilmStorage {
     // Хранение созданных фильмов
     private final Map<Long, Film> films = new HashMap<>();
 
-    private final static String EXCEPTION_TEXT_ID_FILM_NOT_FOUND = "Фильм не найден по идентификатору: ";
+    private static final String EXCEPTION_TEXT_ID_FILM_NOT_FOUND = "Фильм не найден по идентификатору: ";
 
 
     @Override
