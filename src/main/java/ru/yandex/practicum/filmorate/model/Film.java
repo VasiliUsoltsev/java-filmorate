@@ -7,9 +7,11 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
-public class Film {
+public class Film implements Comparable<Film> {
     Long id;
 
     @NotNull
@@ -23,4 +25,14 @@ public class Film {
 
     @Min(value = 1, message = "Продолжительность фильма не может быть отрицательным")
     Integer duration;
+    Set<Long> likes;
+
+    Film() {
+        likes = new HashSet<>();
+    }
+
+    @Override
+    public int compareTo(Film o) {
+        return Integer.compare(this.getLikes().size(), o.getLikes().size());
+    }
 }
