@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -8,14 +10,15 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
     private final UserStorage userStorage;
 
-    public UserService(UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
-
     public void addFriend(Long id, Long friendId) {
+        if (id.equals(friendId)) {
+            throw new ValidationException("Идентификаторы пользователей не должны совпадать");
+        }
+
         User user = userStorage.getUser(id);
         User userFriend = userStorage.getUser(friendId);
 

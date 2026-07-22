@@ -20,10 +20,4 @@ public class ErrorHandler {
     public Map<String, String> handleValidationException(final ValidationException e) {
         return Map.of("Некорректный запрос", e.getMessage());
     }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, Long> handleObjectNotFoundw(final IllegalArgumentFilmorateException e) {
-        return Map.of(e.getMessage(), e.getCount());
-    }
 }
