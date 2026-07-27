@@ -7,28 +7,25 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Data
 public class Film implements Comparable<Film> {
-    Long id;
+    private Long id;
+    private String name;
+    private String description;
+    private LocalDate releaseDate;
+    private Integer duration;
+    private Set<Long> likes;
+    private List<Genre> genres;
+    private Mpa mpa;
 
-    @NotNull
-    @NotBlank
-    String name;
-
-    @Size(max = 200, message = "Описание не должно превышать 200 символов")
-    String description;
-
-    LocalDate releaseDate;
-
-    @Min(value = 1, message = "Продолжительность фильма не может быть отрицательным")
-    Integer duration;
-    Set<Long> likes;
-
-    Film() {
+    public Film() {
         likes = new HashSet<>();
+        genres = new ArrayList<>();
     }
 
     @Override

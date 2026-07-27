@@ -2,12 +2,14 @@ package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
@@ -15,25 +17,29 @@ import java.util.Collection;
 
 @Slf4j
 @RestController
-@RequiredArgsConstructor
 @Validated
 @RequestMapping("/films")
 public class FilmController {
     private final FilmStorage filmStorage;
     private final FilmService filmService;
 
+    public FilmController(@Qualifier("filmDbStorage") FilmStorage filmStorage, FilmService filmService) {
+        this.filmStorage = filmStorage;
+        this.filmService = filmService;
+    }
+
     @GetMapping
-    public Collection<Film> getAll() {
+    public Collection<FilmDto> getAll() {
         return filmStorage.getAll();
     }
 
     @GetMapping("/{id}")
-    public Film getFilm(@PathVariable Long id) {
+    public FilmDto getFilm(@PathVariable Long id) {
         return filmStorage.getFilm(id);
     }
 
     @GetMapping("/popular")
-    public Collection<Film> getPopularFilm(
+    public Collection<FilmDto> getPopularFilm(
             @RequestParam(defaultValue = "10")
             @Positive(message = "Недопустимое значение параметра") Long count
     ) {
@@ -42,12 +48,12 @@ public class FilmController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Film create(@Valid @RequestBody Film newFilm) {
+    public FilmDto create(@Valid @RequestBody NewFilmRequest newFilm) {
         return filmStorage.createFilm(newFilm);
     }
 
     @PutMapping
-    public Film update(@Valid @RequestBody Film updateFilm) {
+    public FilmDto update(@Valid @RequestBody UpdateFilmRequest updateFilm) {
         return filmStorage.updateFilm(updateFilm);
     }
 
@@ -60,8 +66,9 @@ public class FilmController {
     }
 
     @DeleteMapping("/{removeFilmId}")
-    public Film delete(@PathVariable() Long removeFilmId) {
-        return filmStorage.removeFilm(removeFilmId);
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable() Long removeFilmId) {
+        filmStorage.removeFilm(removeFilmId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
