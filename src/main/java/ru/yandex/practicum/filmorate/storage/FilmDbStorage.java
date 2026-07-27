@@ -165,8 +165,8 @@ public class FilmDbStorage implements FilmStorage {
         film.setGenres(genres);
 
         Long mpaId = film.getMpa().getId();
-        Mpa mpa = mpaRepository.findMpaById(mpaId).
-                orElseThrow(() -> new ExceptionObjectNotFound(EXCEPTION_TEXT_ID_MPA_NOT_FOUND, mpaId));
+        Mpa mpa = mpaRepository.findMpaById(mpaId)
+                .orElseThrow(() -> new ExceptionObjectNotFound(EXCEPTION_TEXT_ID_MPA_NOT_FOUND, mpaId));
         film.setMpa(mpa);
 
         // Обогащаем данными о лайках
