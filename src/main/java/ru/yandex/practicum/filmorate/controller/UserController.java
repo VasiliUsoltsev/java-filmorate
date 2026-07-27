@@ -1,107 +1,75 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/users")
 public class UserController {
-    // Хранение созданных пользователей
-    private final Map<Long, User> users = new HashMap<>();
+    private final UserStorage userStorage;
+    private final UserService userService;
 
     @GetMapping
-    public Collection<User> findAll() {
+    public Collection<User> getAll() {
+        return userStorage.getAll();
+    }
 
-        return users.values();
+    @GetMapping("/{id}")
+    public User getUser(@PathVariable Long id) {
+        return userStorage.getUser(id);
+    }
+
+    @GetMapping("/{id}/friends")
+    public Collection<User> getFriendAll(@PathVariable Long id) {
+        return userService.getFriendsAll(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public Collection<User> getCommonFriends(@PathVariable Long id,
+                                             @PathVariable Long otherId
+    ) {
+        return userService.getCommonFriends(id, otherId);
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public User create(@Valid @RequestBody User newUser) {
-        log.debug("Создание пользователя: {}", newUser.getLogin() + " (email: " + newUser.getEmail() + ")");
-
-        // Проверка логина на пробелы
-        isValidLogin(newUser.getLogin());
-
-        // Генерация идентификатора пользователя
-        newUser.setId(getNextId());
-
-        // имя для отображения может быть пустым — в таком случае будет использован логин
-        if (isEmptyNameUser(newUser.getName())) {
-            newUser.setName(newUser.getLogin());
-        }
-
-        log.debug("Данные созданного пользователя: {}", newUser);
-
-        // Добавляем нового пользователя
-        users.put(newUser.getId(), newUser);
-
-        return newUser;
+        return userStorage.createUser(newUser);
     }
-
-    // Генерация идетификатора пользователя
-    private long getNextId() {
-        long currentMaxId = users.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
-    }
-
-    // Проверка корректности логина пользователя
-    private boolean isValidLogin(String login) {
-        if (login.contains(" ")) {
-            throw new ValidationException("Логин пользователя содержит пробелы");
-        }
-        return true;
-    }
-
-    // Обработка имени пользователя
-    public boolean isEmptyNameUser(String name) {
-        return name == null || name.isBlank();
-    }
-
 
     @PutMapping
-    public User update(@Valid @RequestBody User user) {
-        log.debug("Изменение пользователя: {}", user.getLogin() + " (email: " + user.getEmail() + ")");
+    public User update(@Valid @RequestBody User updateUser) {
+        return userStorage.updateUser(updateUser);
+    }
 
-        if (user.getId() == null) {
-            throw new ValidationException("Не указан идентификатор пользователя");
-        }
+    @PutMapping("/{id}/friends/{friendId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateFriend(@PathVariable Long id,
+                             @PathVariable Long friendId
+    ) {
+        userService.addFriend(id, friendId);
+    }
 
-        User oldUser = users.get(user.getId());
+    @DeleteMapping("/{removeUserId}")
+    public User delete(@PathVariable() Long removeUserId) {
+        return userStorage.removeUser(removeUserId);
+    }
 
-        if (oldUser != null && users.containsKey(user.getId())) {
-            // Проверка логина на пробелы
-            isValidLogin(user.getLogin());
-
-            oldUser.setLogin(user.getLogin());
-
-            // имя для отображения может быть пустым — в таком случае будет использован логин
-            if (isEmptyNameUser(user.getName())) {
-                oldUser.setName(user.getLogin());
-            } else {
-                oldUser.setName(user.getName());
-            }
-
-            oldUser.setEmail(user.getEmail());
-
-            if (user.getBirthday() != null) {
-                oldUser.setBirthday(user.getBirthday());
-            }
-        } else {
-            throw new ValidationException("Идентификатор пользователя не найден");
-        }
-        log.debug("Измененные данные пользователя: {}", user);
-        return oldUser;
+    @DeleteMapping("/{id}/friends/{friendId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteFriend(@PathVariable Long id,
+                             @PathVariable Long friendId
+    ) {
+        userService.deleteFriend(id, friendId);
     }
 }

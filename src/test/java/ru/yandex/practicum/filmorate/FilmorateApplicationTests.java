@@ -91,7 +91,7 @@ class FilmorateApplicationTests {
         HttpResponse<String> resp =
                 client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-        assertEquals(200, resp.statusCode());
+        assertEquals(201, resp.statusCode());
 
         // Проверка на превышение границы 201
         json = "{\n" +
@@ -132,7 +132,7 @@ class FilmorateApplicationTests {
         HttpResponse<String> resp =
                 client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-        assertEquals(200, resp.statusCode());
+        assertEquals(201, resp.statusCode());
 
         // Проверка на превышение границы релиза фильма
         json = "{\n" +
@@ -150,7 +150,7 @@ class FilmorateApplicationTests {
         resp =
                 client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-        assertEquals(500, resp.statusCode());
+        assertEquals(400, resp.statusCode());
     }
 
     //продолжительность фильма должна быть положительным числом.
@@ -173,7 +173,7 @@ class FilmorateApplicationTests {
         HttpResponse<String> resp =
                 client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-        assertEquals(200, resp.statusCode());
+        assertEquals(201, resp.statusCode());
 
         // Проверка на превышение границы 201
         json = "{\n" +
@@ -274,7 +274,7 @@ class FilmorateApplicationTests {
         resp =
                 client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-        assertEquals(500, resp.statusCode());
+        assertEquals(400, resp.statusCode());
     }
 
     //имя для отображения может быть пустым — в таком случае будет использован логин;
@@ -296,7 +296,7 @@ class FilmorateApplicationTests {
         HttpResponse<String> resp =
                 client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-        assertEquals(200, resp.statusCode());
+        assertEquals(201, resp.statusCode());
     }
 
     //дата рождения не может быть в будущем.
