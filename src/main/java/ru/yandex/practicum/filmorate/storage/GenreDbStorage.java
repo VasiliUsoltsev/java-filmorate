@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.exception.ExceptionObjectNotFound;
 import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.util.List;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
