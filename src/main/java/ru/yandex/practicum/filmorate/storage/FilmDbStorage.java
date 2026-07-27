@@ -143,9 +143,7 @@ public class FilmDbStorage implements FilmStorage {
 
             // Обогащаем данными о лайках
             Set<Long> listLike = filmRepository.getLikeFilmById(film.getId());
-            film.setLikes(listLike);
-            log.debug("ppppppp"+film);
-        }
+            film.setLikes(listLike);}
 
         return films;
     }
@@ -153,7 +151,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public FilmDto getFilm(Long id) {
         Film film = getFilmModel(id);
-        log.debug("RRRRRR - "+ film);
+
         return FilmMapper.mapToUserDto(film);
     }
 
@@ -178,7 +176,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void addLike(Long filmId, Long userId) {
-        log.debug("CHEck - "+filmRepository.addLike(filmId, userId));
+        filmRepository.addLike(filmId, userId);
     }
 
     @Override
