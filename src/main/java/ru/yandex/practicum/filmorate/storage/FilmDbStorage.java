@@ -143,7 +143,8 @@ public class FilmDbStorage implements FilmStorage {
 
             // Обогащаем данными о лайках
             Set<Long> listLike = filmRepository.getLikeFilmById(film.getId());
-            film.setLikes(listLike);}
+            film.setLikes(listLike);
+        }
 
         return films;
     }
