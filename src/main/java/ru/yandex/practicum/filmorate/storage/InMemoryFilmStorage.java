@@ -2,17 +2,22 @@ package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.exception.ExceptionObjectNotFound;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
-@Component
+@Component("inMemoryFilmStorage")
 public class InMemoryFilmStorage implements FilmStorage {
     // Хранение созданных фильмов
     private final Map<Long, Film> films = new HashMap<>();
@@ -21,7 +26,8 @@ public class InMemoryFilmStorage implements FilmStorage {
 
 
     @Override
-    public Film createFilm(Film newFilm) {
+    public FilmDto createFilm(NewFilmRequest request) {
+        Film newFilm = FilmMapper.mapFromNewFilmRequestToFilm(request);
         log.debug("Создание фильма: {}", newFilm.getName() + "(" + newFilm.getReleaseDate() + ")");
 
         // Дата релиза не может быть раньше 28 декабря 1895 года
@@ -35,11 +41,12 @@ public class InMemoryFilmStorage implements FilmStorage {
         // Добавляем новый фильм
         films.put(newFilm.getId(), newFilm);
 
-        return newFilm;
+        return FilmMapper.mapToUserDto(newFilm);
     }
 
     @Override
-    public Film updateFilm(Film updateFilm) {
+    public FilmDto updateFilm(UpdateFilmRequest request) {
+        Film updateFilm = FilmMapper.mapFromUpdateFilmRequestToFilm(request);
         log.info("Изменение фильма: {}", updateFilm.getName() + "(" + updateFilm.getReleaseDate() + ")");
         log.debug("К нам пришло: {}", updateFilm);
 
@@ -72,35 +79,57 @@ public class InMemoryFilmStorage implements FilmStorage {
 
         log.debug("Измененные данные фильма: {}", oldFilm);
 
-        return oldFilm;
+        return FilmMapper.mapToUserDto(oldFilm);
     }
 
     @Override
-    public Film removeFilm(Long removeFilmId) {
+    public void removeFilm(Long removeFilmId) {
         Film removeFilm = films.get(removeFilmId);
 
         if (removeFilm != null) {
             films.remove(removeFilmId);
-            return removeFilm;
         } else {
             throw new ExceptionObjectNotFound(EXCEPTION_TEXT_ID_FILM_NOT_FOUND, removeFilm.getId());
         }
     }
 
     @Override
-    public Collection<Film> getAll() {
-        return films.values();
+    public Collection<FilmDto> getAll() {
+        return films.values()
+                .stream()
+                .map(FilmMapper::mapToUserDto)
+                .toList();
     }
 
     @Override
-    public Film getFilm(Long id) {
+    public Collection<Film> getAllModel() {
+        return List.of();
+    }
+
+    @Override
+    public FilmDto getFilm(Long id) {
         Film film = films.get(id);
 
         if (film == null) {
             throw new ExceptionObjectNotFound(EXCEPTION_TEXT_ID_FILM_NOT_FOUND, id);
         }
 
-        return film;
+        return FilmMapper.mapToUserDto(film);
+    }
+
+    @Override
+    public Film getFilmModel(Long id) {
+        return null;
+    }
+
+    @Override
+    public void addLike(Long filmId, Long userId) {
+
+    }
+
+    @Override
+    public void delLike(Long filmId, Long userId) {
+
     }
 
     // Генератор идетификатора фильма

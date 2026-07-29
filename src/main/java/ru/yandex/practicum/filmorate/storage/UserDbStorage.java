@@ -1,7 +1,9 @@
 package ru.yandex.practicum.filmorate.storage;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.dal.UserRepository;
 import ru.yandex.practicum.filmorate.dto.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.dto.UserDto;
@@ -11,14 +13,12 @@ import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
-@Component("inMemoryUserStorage")
-public class InMemoryUserStorage implements UserStorage {
-    // Хранение созданных пользователей
-    private final Map<Long, User> users = new HashMap<>();
+@Component("userDbStorage")
+@RequiredArgsConstructor
+public class UserDbStorage implements UserStorage {
+    private final UserRepository userRepository;
 
     public static final String EXCEPTION_TEXT_ID_USER_NOT_FOUND = "Пользователь не найден по идентификатору: ";
 
@@ -30,18 +30,15 @@ public class InMemoryUserStorage implements UserStorage {
         // Проверка логина на пробелы
         isValidLogin(newUser.getLogin());
 
-        // Генерация идентификатора пользователя
-        newUser.setId(getNextId());
-
         // имя для отображения может быть пустым — в таком случае будет использован логин
         if (isEmptyNameUser(newUser.getName())) {
             newUser.setName(newUser.getLogin());
         }
 
-        log.debug("Данные созданного пользователя: {}", newUser);
-
         // Добавляем нового пользователя
-        users.put(newUser.getId(), newUser);
+        newUser = userRepository.createUser(newUser);
+
+        log.debug("Данные созданного пользователя: {}", newUser);
 
         return UserMapper.mapToUserDto(newUser);
     }
@@ -49,51 +46,51 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public UserDto updateUser(UpdateUserRequest request) {
         User updateUser = UserMapper.mapFromUpdateUserRequestToUser(request);
+
         log.debug("Изменение пользователя: {}", updateUser.getLogin() + " (email: " + updateUser.getEmail() + ")");
 
         if (updateUser.getId() == null) {
             throw new ValidationException("Не указан идентификатор пользователя");
         }
 
-        User oldUser = users.get(updateUser.getId());
+        Long userId = updateUser.getId();
+        User oldUser = userRepository.findUserById(userId)
+                .orElseThrow(() -> new ExceptionObjectNotFound(EXCEPTION_TEXT_ID_USER_NOT_FOUND, userId));
 
-        if (oldUser != null && users.containsKey(updateUser.getId())) {
-            // Проверка логина на пробелы
-            isValidLogin(updateUser.getLogin());
+        // Проверка логина на пробелы
+        isValidLogin(updateUser.getLogin());
 
-            oldUser.setLogin(updateUser.getLogin());
+        oldUser.setLogin(updateUser.getLogin());
 
-            // имя для отображения может быть пустым — в таком случае будет использован логин
-            if (isEmptyNameUser(updateUser.getName())) {
-                oldUser.setName(updateUser.getLogin());
-            } else {
-                oldUser.setName(updateUser.getName());
-            }
-
-            oldUser.setEmail(updateUser.getEmail());
-
-            oldUser.setBirthday(updateUser.getBirthday());
+        // имя для отображения может быть пустым — в таком случае будет использован логин
+        if (isEmptyNameUser(updateUser.getName())) {
+            oldUser.setName(updateUser.getLogin());
         } else {
-            throw new ExceptionObjectNotFound(EXCEPTION_TEXT_ID_USER_NOT_FOUND, updateUser.getId());
+            oldUser.setName(updateUser.getName());
         }
-        log.debug("Измененные данные пользователя: {}", oldUser);
-        return UserMapper.mapToUserDto(oldUser);
+
+        oldUser.setEmail(updateUser.getEmail());
+
+        oldUser.setBirthday(updateUser.getBirthday());
+
+        updateUser = userRepository.updateUser(oldUser);
+
+        log.debug("Измененные данные пользователя: {}", updateUser);
+
+        return UserMapper.mapToUserDto(updateUser);
     }
 
     @Override
     public void removeUser(Long removeUserId) {
-        User removeUser = users.get(removeUserId);
-
-        if (removeUser != null) {
-            users.remove(removeUserId);
-        } else {
-            throw new ExceptionObjectNotFound(EXCEPTION_TEXT_ID_USER_NOT_FOUND, removeUser.getId());
+        boolean isRemove = userRepository.delUserById(removeUserId);
+        if (!isRemove) {
+            throw new ExceptionObjectNotFound(EXCEPTION_TEXT_ID_USER_NOT_FOUND, removeUserId);
         }
     }
 
     @Override
     public Collection<UserDto> getAll() {
-        return users.values()
+        return userRepository.findUsersAll()
                 .stream()
                 .map(UserMapper::mapToUserDto)
                 .toList();
@@ -101,38 +98,27 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public UserDto getUser(Long id) {
-        User user = users.get(id);
+        User user = getUserModel(id);
 
-        if (user == null) {
-            throw new ExceptionObjectNotFound(EXCEPTION_TEXT_ID_USER_NOT_FOUND, id);
-        }
-
-        return UserMapper.mapToUserDto(users.get(id));
+        return UserMapper.mapToUserDto(user);
     }
 
     @Override
     public User getUserModel(Long id) {
-        return null;
+        User user = userRepository.findUserById(id).orElseThrow(
+                () -> new ExceptionObjectNotFound(EXCEPTION_TEXT_ID_USER_NOT_FOUND, id));
+
+        return user;
     }
 
     @Override
     public void addFriend(Long userId, Long friendUserId) {
-
+        userRepository.addFriend(userId, friendUserId);
     }
 
     @Override
     public void delFriend(Long userId, Long friendUserId) {
-
-    }
-
-    // Генерация идетификатора пользователя
-    private long getNextId() {
-        long currentMaxId = users.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+        userRepository.delFriend(userId, friendUserId);
     }
 
     // Проверка корректности логина пользователя
@@ -144,7 +130,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     // Обработка имени пользователя
-    public boolean isEmptyNameUser(String name) {
+    private boolean isEmptyNameUser(String name) {
         return name == null || name.isBlank();
     }
 }

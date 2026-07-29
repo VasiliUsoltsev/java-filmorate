@@ -1,0 +1,34 @@
+package ru.yandex.practicum.filmorate.dto;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+@Getter
+@Setter
+@ToString
+public class FilmDto {
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Long id;
+    private String name;
+    private String description;
+    private LocalDate releaseDate;
+    private Integer duration;
+    private List<Genre> genres;
+    private Mpa mpa;
+    private Set<Long> likes;
+
+    public FilmDto() {
+        genres = new ArrayList<>();
+        likes = new HashSet<>();
+    }
+}
