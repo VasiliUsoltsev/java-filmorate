@@ -166,7 +166,13 @@ public class FilmDbStorage implements FilmStorage {
 
             // Обогащаем данными о лайках
             if (listLikes != null) {
-                film.setLikes(listLikes.get(filmId));
+                Set<Long> listLike = listLikes.get(filmId);
+                if (listLike != null) {
+                    film.setLikes(listLike);
+                } else {
+                    film.setLikes(new HashSet<>());
+                }
+
             }
 
         }
