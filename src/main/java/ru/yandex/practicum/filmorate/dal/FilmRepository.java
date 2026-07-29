@@ -6,9 +6,8 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.sql.ResultSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -98,5 +97,30 @@ public class FilmRepository extends BaseRepository<Film> {
         return super.jdbc.queryForList(query, Long.class)
                 .stream()
                 .collect(Collectors.toSet());
+    }
+
+    public Map<Long, Set<Long>> getLikesFilmById(List<Long> listFilmsId) {
+        if (listFilmsId == null || listFilmsId.isEmpty()) {
+            return Collections.EMPTY_MAP;
+        }
+
+        String parametr = listFilmsId.stream()
+                .map(id -> "?")
+                .collect(Collectors.joining(", "));
+
+        String query = "SELECT film_id, user_id FROM film_likes WHERE film_id IN (" + parametr + ")";
+
+        Map<Long, Set<Long>> result = new HashMap<>();
+        super.jdbc.query(query, (ResultSet rs) -> {
+            while (rs.next()) {
+                Long filmId = rs.getLong("film_id");
+                Long userId = rs.getLong("user_id");
+
+                result.computeIfAbsent(filmId, k -> new HashSet<>()).add(userId);
+            }
+            return result;
+        }, listFilmsId.toArray());
+
+        return result;
     }
 }

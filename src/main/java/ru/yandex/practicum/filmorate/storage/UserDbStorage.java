@@ -130,7 +130,7 @@ public class UserDbStorage implements UserStorage {
     }
 
     // Обработка имени пользователя
-    public boolean isEmptyNameUser(String name) {
+    private boolean isEmptyNameUser(String name) {
         return name == null || name.isBlank();
     }
 }

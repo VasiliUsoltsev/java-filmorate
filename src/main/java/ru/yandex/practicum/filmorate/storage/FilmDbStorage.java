@@ -130,20 +130,45 @@ public class FilmDbStorage implements FilmStorage {
     public Collection<Film> getAllModel() {
         List<Film> films = filmRepository.findFilmsAll();
 
+        List<Long> listFilmsId = films.stream()
+                .map(film -> film.getId())
+                .toList();
+
+        Map<Long, Set<Genre>> listGenres = genreRepository.findGenresByArrayFilmId(listFilmsId);
+        log.debug("Выборка жанров - " + listGenres);
+
+        List<Mpa> listMpa = mpaRepository.findMpaAll();
+        log.debug("Выборка рейтинга - " + listMpa);
+
+        Map<Long, Set<Long>> listLikes = filmRepository.getLikesFilmById(listFilmsId);
+        log.debug("Выборка лайков - " + listLikes);
+
         for (Film film : films) {
+            Long filmId = film.getId();
+            log.debug("Обогащаем фильм с id = " + filmId);
+
             // Обогащаем данными о жанрах
-            List<Genre> genres = genreRepository.findGenresByFilmId(film.getId());
-            film.setGenres(genres);
+            Set<Genre> genres = listGenres.get(filmId);
+            if (genres != null) {
+                film.setGenres(genres
+                        .stream()
+                        .toList()
+                );
+            }
 
             // Обогащаем данными о возрастном рейтинге
             Long mpaId = film.getMpa().getId();
-            Mpa mpa = mpaRepository.findMpaById(mpaId)
+            Mpa mpa = listMpa.stream()
+                    .filter(temp -> temp.getId() == mpaId)
+                    .findFirst()
                     .orElseThrow(() -> new ExceptionObjectNotFound(EXCEPTION_TEXT_ID_MPA_NOT_FOUND, mpaId));
-            film.setMpa(mpa);
+
 
             // Обогащаем данными о лайках
-            Set<Long> listLike = filmRepository.getLikeFilmById(film.getId());
-            film.setLikes(listLike);
+            if (listLikes != null) {
+                film.setLikes(listLikes.get(filmId));
+            }
+
         }
 
         return films;

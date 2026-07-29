@@ -5,8 +5,9 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Genre;
 
-import java.util.List;
-import java.util.Optional;
+import java.sql.ResultSet;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 public class GenreRepository extends BaseRepository<Genre> {
@@ -52,4 +53,34 @@ public class GenreRepository extends BaseRepository<Genre> {
                 filmId
         );
     }
+
+    public Map<Long, Set<Genre>> findGenresByArrayFilmId(List<Long> listFilmsId) {
+        if (listFilmsId == null || listFilmsId.isEmpty()) {
+            return Collections.EMPTY_MAP;
+        }
+
+        String parametr = listFilmsId.stream()
+                .map(id -> "?")
+                .collect(Collectors.joining(", "));
+
+        String query = "SELECT fmg.film_id, g.genre_id, g.name " +
+                "FROM genre g " +
+                "JOIN film_multi_genre fmg ON g.genre_id=fmg.genre_id " +
+                "WHERE fmg.film_id IN (" + parametr + ")";
+        Map<Long, Set<Genre>> result = new HashMap<>();
+        super.jdbc.query(query, (ResultSet rs) -> {
+            while (rs.next()) {
+                Long filmId = rs.getLong("film_id");
+                Genre genre = new Genre();
+                genre.setId(rs.getLong("genre_id"));
+                genre.setName(rs.getString("name"));
+
+                result.computeIfAbsent(filmId, k -> new HashSet<>()).add(genre);
+            }
+            return result;
+        }, listFilmsId.toArray());
+
+        return result;
+    }
 }
+
